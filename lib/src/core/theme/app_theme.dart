@@ -17,11 +17,10 @@ class AppTheme {
         
         surface: AppColors.background,
         onSurface: AppColors.foreground,
-        
+
         error: Colors.red,
       ),
 
-      // Configuração padrão da AppBar
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.secondary,
         foregroundColor: AppColors.white,
@@ -42,6 +41,7 @@ class AppTheme {
         filled: true,
         fillColor: Colors.white,
         labelStyle: const TextStyle(color: AppColors.mutedForeground),
+        hintStyle: const TextStyle(color: AppColors.mutedForeground),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,

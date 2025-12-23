@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:trying_flutter/src/core/constants/app_assets.dart';
+import 'package:trying_flutter/src/shared/utils/app_validators.dart';
+import 'package:trying_flutter/src/shared/widgets/responsive_layout.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,131 +14,156 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _showPassword = ValueNotifier<bool>(false);
 
-  // FormKey / Validator
+  final _showPassword = ValueNotifier<bool>(false);
   final _formKey = GlobalKey<FormState>();
 
   void _login() {
+    // TODO implement registration logic
     if (_formKey.currentState!.validate()) {
-      // LOGICA DE LOGIN AQUI
-      
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Processando login...')));
-      
-      context.go('/dashboard');
+      context.go('/admin/dashboard');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 400, maxWidth: 800),
+      resizeToAvoidBottomInset: false,
+      body: ResponsiveLayout(
+        mobile: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundLogin),
+              fit: BoxFit.cover,
+              opacity: 0.6,
+            ),
+          ),
           padding: const EdgeInsets.all(24),
-          child: Card(
-            elevation: 8,
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [_buildLoginForm()],
+          ),
+        ),
 
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'E-mail',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Digite seu email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Digite um email válido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _showPassword,
-                      builder: (context, value, child) {
-                        return TextFormField(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(
-                            labelText: 'Senha',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.lock),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Digite sua senha';
-                            }
-                            if (value.length < 6) {
-                              return 'A senha deve ter ao menos 6 caracteres';
-                            }
-                            return null;
-                          },
-                          obscureText: !_showPassword.value,
-                        );
-                      },
-                    ),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _showPassword,
-                      builder: (context, value, child) {
-                        return CheckboxListTile(
-                          title: const Text('Mostrar Senha'),
-                          value: value,
-                          onChanged: (newValue) {
-                            _showPassword.value = newValue ?? false;
-                          },
-                          controlAffinity: ListTileControlAffinity.leading,
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _login,
-                        child: const Text('ENTRAR'),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () {
-                        context.go('/consumer');
-                      },
-                      child: const Text('Acessar como Consumidor'),
-                    ),
-                  ],
-                ),
-              ),
+        desktop: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundLogin),
+              fit: BoxFit.cover,
+              opacity: 0.6,
+            ),
+            color: Color(0xFF121212),
+          ),
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: _buildLoginForm(),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Image.asset(AppAssets.logo, height: 100, fit: BoxFit.contain),
+
+        const SizedBox(height: 24),
+
+        Card(
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Bem-vindo',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 32),
+
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'E-mail',
+                      prefixIcon: Icon(Icons.email),
+                      hintText: 'exemplo@email.com',
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: AppValidators.validateEmail,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _showPassword,
+                    builder: (context, showPass, child) {
+                      return TextFormField(
+                        controller: _passwordController,
+                        obscureText: !showPass,
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          prefixIcon: const Icon(Icons.lock),
+                          suffixIconColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              showPass
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () => _showPassword.value = !showPass,
+                          ),
+                        ),
+                        validator: AppValidators.validatePassword,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _login,
+                      child: const Text('ENTRAR'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextButton(
+                    onPressed: () => context.go('/register'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                    child: const Text(
+                      'Cadastre-se',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
