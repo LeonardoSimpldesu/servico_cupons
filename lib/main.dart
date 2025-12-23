@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trying_flutter/src/core/theme/app_theme.dart';
 import 'src/core/router.dart';
 
 void main() {
@@ -13,10 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Sistema de Cupons',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
       routerConfig: router,
     );
   }

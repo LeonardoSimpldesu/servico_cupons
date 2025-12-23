@@ -3,9 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import 'widgets/admin_drawer.dart';
-import '../../shared/formatters/upper_case_text_formatter.dart';
-
-enum DiscountType { percentage, fixedAmount }
+import 'package:trying_flutter/src/shared/formatters/upper_case_text_formatter.dart';
+import 'package:trying_flutter/src/shared/models/coupon_model.dart';
 
 class CreateCouponPage extends StatefulWidget {
   const CreateCouponPage({super.key});
@@ -34,19 +33,18 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
   }
 
   void _generateQRCode() {
-    FocusScope.of(context).unfocus();
+  FocusScope.of(context).unfocus();
+      if (_formKey.currentState!.validate()) {
+        final coupon = CouponModel(
+          name: _nameController.text,
+          code: _codeController.text,
+          type: _selectedType,
+          value: double.parse(_valueController.text.replaceAll(',', '.')),
+        );
 
-    if (_formKey.currentState!.validate()) {
-      final name = _nameController.text;
-      final code = _codeController.text;
-      final value = double.parse(_valueController.text.replaceAll(',', '.'));
-
-      final jsonString =
-          '{"name":"$name", "code":"$code", "val":$value, "type":"${_selectedType.name}"}';
-
-      setState(() {
-        _qrData = jsonString;
-      });
+        setState(() {
+          _qrData = coupon.toJson(); 
+        });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('QR Code gerado com sucesso!')),
@@ -136,7 +134,7 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                                       child: Text('Percentagem (%)'),
                                     ),
                                     DropdownMenuItem(
-                                      value: DiscountType.fixedAmount,
+                                      value: DiscountType.fixed,
                                       child: Text('Fixo (R\$)'),
                                     ),
                                   ],

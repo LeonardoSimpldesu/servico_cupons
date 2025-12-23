@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class AdminLoginPage extends StatefulWidget {
-  const AdminLoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<AdminLoginPage> createState() => _AdminLoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _AdminLoginPageState extends State<AdminLoginPage> {
+class _LoginPageState extends State<LoginPage> {
   // Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -46,7 +46,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Admin Login',
+                      'Login',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -118,6 +118,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         onPressed: _login,
                         child: const Text('ENTRAR'),
                       ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        context.go('/consumer');
+                      },
+                      child: const Text('Acessar como Consumidor'),
                     ),
                   ],
                 ),
