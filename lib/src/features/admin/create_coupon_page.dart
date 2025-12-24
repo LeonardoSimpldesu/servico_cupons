@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:trying_flutter/src/core/theme/app_colors.dart';
 
+import 'package:trying_flutter/src/shared/utils/app_validators.dart';
 import 'widgets/admin_drawer.dart';
 import 'package:trying_flutter/src/shared/formatters/upper_case_text_formatter.dart';
 import 'package:trying_flutter/src/shared/models/coupon_model.dart';
@@ -33,18 +36,18 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
   }
 
   void _generateQRCode() {
-  FocusScope.of(context).unfocus();
-      if (_formKey.currentState!.validate()) {
-        final coupon = CouponModel(
-          name: _nameController.text,
-          code: _codeController.text,
-          type: _selectedType,
-          value: double.parse(_valueController.text.replaceAll(',', '.')),
-        );
+    FocusScope.of(context).unfocus();
+    if (_formKey.currentState!.validate()) {
+      final coupon = CouponModel(
+        name: _nameController.text,
+        code: _codeController.text,
+        type: _selectedType,
+        value: double.parse(_valueController.text.replaceAll(',', '.')),
+      );
 
-        setState(() {
-          _qrData = coupon.toJson(); 
-        });
+      setState(() {
+        _qrData = coupon.toJson();
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('QR Code gerado com sucesso!')),
@@ -91,8 +94,9 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                               helperText: 'Ex: Black Friday 2024',
                             ),
                             validator: (value) {
-                              if (value == null || value.isEmpty)
-                                return 'Informe o nome';
+                              if (value == null || value.isEmpty) {
+                                return 'Nome obrigatório';
+                              }
                               return null;
                             },
                           ),
@@ -113,7 +117,7 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                               UpperCaseTextFormatter(),
                             ],
                             validator: (value) => value?.isEmpty ?? true
-                                ? 'Informe o código'
+                                ? 'Código obrigatório'
                                 : null,
                           ),
                           const SizedBox(height: 16),
@@ -159,19 +163,11 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                                       RegExp(r'[0-9.,]'),
                                     ),
                                   ],
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Informe o valor';
-                                    }
-                                    final number = double.tryParse(
-                                      value.replaceAll(',', '.'),
-                                    );
-                                    if (number == null) return 'Valor inválido';
-                                    if (number <= 0) {
-                                      return 'Deve ser maior que 0';
-                                    }
-                                    return null;
-                                  },
+                                  validator: (value) =>
+                                      AppValidators.validateCouponValue(
+                                        value,
+                                        _selectedType,
+                                      ),
                                 ),
                               ),
                             ],
@@ -190,6 +186,14 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                                 foregroundColor: Colors.white,
                               ),
                             ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          TextButton.icon(
+                            onPressed: () => context.go('/admin/coupons'),
+                            style: TextButton.styleFrom(foregroundColor: AppColors.mutedForeground),
+                            label: const Text('Cancelar'),
                           ),
                         ],
                       ),

@@ -51,6 +51,16 @@ class AppTheme {
           borderSide: BorderSide(color: AppColors.links, width: 2),
         ),
       ),
+
+      cardTheme: CardThemeData(
+        color: Colors.white,
+      ),
+
+      dividerColor: AppColors.mutedForeground,
+      dividerTheme: DividerThemeData(
+        thickness: 0.5,
+        color: AppColors.mutedForeground,
+      ),
     );
   }
 }

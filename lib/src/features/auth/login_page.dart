@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Processando login...')));
-      context.go('/admin/dashboard');
+      context.go('/admin/coupons');
     }
   }
 

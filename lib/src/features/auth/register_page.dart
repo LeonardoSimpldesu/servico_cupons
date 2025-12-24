@@ -35,7 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Processando register...')));
-      context.go('/admin/dashboard');
+      context.go('/admin/coupons');
     }
   }
 

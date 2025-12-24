@@ -1,3 +1,5 @@
+import 'package:trying_flutter/src/shared/models/coupon_model.dart';
+
 class AppValidators {
   AppValidators._();
 
@@ -40,6 +42,16 @@ class AppValidators {
     if (value == null || value.isEmpty) return 'O telefone é obrigatório';
     final phoneRegex = RegExp(r'^\(\d{2}\) \d{4,5}-\d{4}$');
     if (!phoneRegex.hasMatch(value)) return 'Telefone inválido';
+    return null;
+  }
+
+  static String? validateCouponValue(String? value, DiscountType type) {
+    if (value == null || value.isEmpty) return 'O valor do cupom é obrigatório';
+    final number = double.tryParse(value.replaceAll(',', '.'));
+    if (number == null || number <= 0) return 'Valor inválido';
+    if (type == DiscountType.percentage && (number <= 0 || number > 100)) {
+      return 'Porcentagem deve ser entre 0 e 100';
+    }
     return null;
   }
 }

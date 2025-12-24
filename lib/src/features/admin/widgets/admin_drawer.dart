@@ -22,23 +22,21 @@ class AdminDrawer extends StatelessWidget {
             ),
           ),
           
-          // Item 1: Dashboard
           ListTile(
-            leading: const Icon(Icons.dashboard),
-            title: const Text('Dashboard'),
+            leading: const Icon(Icons.confirmation_num_outlined),
+            title: const Text('Coupons'),
             onTap: () {
               Navigator.pop(context); 
-              context.go('/dashboard');
+              context.go('/admin/coupons');
             },
           ),
 
-          // Item 2: Cadastrar Cupom
           ListTile(
             leading: const Icon(Icons.confirmation_number),
             title: const Text('Cadastrar Cupom'),
             onTap: () {
               Navigator.pop(context);
-              context.go('/create-coupon'); 
+              context.go('/admin/create-coupon'); 
             },
           ),
 

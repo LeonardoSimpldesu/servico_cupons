@@ -1,16 +1,16 @@
 import 'package:go_router/go_router.dart';
 
-import 'package:trying_flutter/src/features/admin/admin_dashboard_page.dart';
+import 'package:trying_flutter/src/features/admin/admin_coupon_page.dart';
 import 'package:trying_flutter/src/features/admin/create_coupon_page.dart';
 
 final List<RouteBase> adminRoutes = [
   GoRoute(
     path: '/admin',
-    builder: (context, state) => const AdminDashboardPage(),
+    builder: (context, state) => const AdminCouponsPage(),
     routes: [
       GoRoute(
-        path: 'dashboard',
-        builder: (context, state) => const AdminDashboardPage(),
+        path: 'coupons',
+        builder: (context, state) => const AdminCouponsPage(),
       ),
       GoRoute(
         path: 'create-coupon',
