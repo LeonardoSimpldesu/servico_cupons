@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:trying_flutter/src/core/theme/app_colors.dart';
-import 'package:trying_flutter/src/shared/utils/app_validators.dart';
 import 'widgets/admin_drawer.dart';
-import 'package:trying_flutter/src/shared/formatters/upper_case_text_formatter.dart';
 import 'package:trying_flutter/src/shared/models/coupon_model.dart';
 import 'package:trying_flutter/src/shared/repositories/coupon_repository.dart';
+import 'package:trying_flutter/src/features/admin/widgets/coupon_form.dart';
 
 class CreateCouponPage extends StatefulWidget {
   const CreateCouponPage({super.key});
@@ -57,6 +54,12 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
           value: double.parse(_valueController.text.replaceAll(',', '.')),
         );
 
+        final existingCoupon = await _repository.showCoupon(coupon);
+
+        if (existingCoupon != null) {
+          throw 'Já existe um cupom com este código.';
+        }
+        
         await _repository.createCoupon(coupon);
 
         setState(() {
@@ -106,151 +109,24 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                   elevation: 4,
                   child: Padding(
                     padding: const EdgeInsets.all(32),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'Dados do Cupom',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
+                    child: CouponForm(
+                      formKey: _formKey,
+                      nameController: _nameController,
+                      codeController: _codeController,
+                      valueController: _valueController,
+                      selectedType: _selectedType,
+                      isLoading: _isLoading,
+                      submitLabel: 'SALVAR E GERAR QR',
 
-                          TextFormField(
-                            controller: _nameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Nome da Campanha',
-                              border: OutlineInputBorder(),
-                              helperText: 'Ex: Black Friday 2024',
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Nome obrigatório';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
+                      onTypeChanged: (newValue) {
+                        if (newValue != null) {
+                          setState(() => _selectedType = newValue);
+                        }
+                      },
 
-                          TextFormField(
-                            controller: _codeController,
-                            decoration: const InputDecoration(
-                              labelText: 'Código do Cupom',
-                              border: OutlineInputBorder(),
-                              helperText:
-                                  'Apenas letras e números (sem espaços)',
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-zA-Z0-9]'),
-                              ),
-                              UpperCaseTextFormatter(),
-                            ],
-                            validator: (value) => value?.isEmpty ?? true
-                                ? 'Código obrigatório'
-                                : null,
-                          ),
-                          const SizedBox(height: 16),
+                      onSubmit: _generateQRCode,
 
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: DropdownButtonFormField<DiscountType>(
-                                  initialValue: _selectedType,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Tipo do desconto',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: DiscountType.percentage,
-                                      child: Text('Percentagem (%)'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: DiscountType.fixed,
-                                      child: Text('Fixo (R\$)'),
-                                    ),
-                                  ],
-                                  onChanged: (v) =>
-                                      setState(() => _selectedType = v!),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _valueController,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Valor do Desconto',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp(r'[0-9.,]'),
-                                    ),
-                                  ],
-                                  validator: (value) =>
-                                      AppValidators.validateCouponValue(
-                                        value,
-                                        _selectedType,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 32),
-
-                          SizedBox(
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _generateQRCode,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                disabledBackgroundColor: Colors.blue.shade200,
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.qr_code),
-                                        SizedBox(width: 8),
-                                        Text('SALVAR E GERAR QR'),
-                                      ],
-                                    ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          TextButton.icon(
-                            onPressed: () => context.go('/admin/coupons'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.mutedForeground,
-                            ),
-                            label: const Text('Voltar'),
-                          ),
-                        ],
-                      ),
+                      onCancel: () => context.go('/admin/coupons'),
                     ),
                   ),
                 ),

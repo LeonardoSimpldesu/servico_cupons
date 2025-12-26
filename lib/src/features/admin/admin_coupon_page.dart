@@ -28,8 +28,7 @@ class _AdminCouponsPageState extends State<AdminCouponsPage> {
   }
 
   void _editCoupon(CouponModel coupon) {
-    // Futuro: context.go('/admin/edit/${coupon.id}');
-    print('Editar ${coupon.code}');
+    context.push('/admin/edit-coupon', extra: coupon);
   }
 
   @override
