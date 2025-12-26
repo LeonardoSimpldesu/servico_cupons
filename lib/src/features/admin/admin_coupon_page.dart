@@ -17,13 +17,27 @@ class AdminCouponsPage extends StatefulWidget {
 class _AdminCouponsPageState extends State<AdminCouponsPage> {
   final CouponRepository _repository = CouponRepository();
 
-  void _deleteCoupon(CouponModel coupon) async {
-    await _repository.deleteCoupon(coupon.code);
+  void _toggleStatus(CouponModel coupon) async {
+    try {
+      await _repository.toggleActiveState(coupon.code);
 
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('${coupon.name} removido!')));
+      final newStatus = !coupon.isActive;
+
+      if (mounted) {
+        final text = newStatus ? 'ativado' : 'desativado';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cupom ${coupon.name} foi $text!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao remover ${coupon.name}: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -57,7 +71,6 @@ class _AdminCouponsPageState extends State<AdminCouponsPage> {
 
           return CouponList(
             coupons: couponsFromFirebase,
-            gridItemHeight: 165,
             itemBuilder: (context, coupon) {
               return CouponCard(
                 coupon: coupon,
@@ -70,10 +83,17 @@ class _AdminCouponsPageState extends State<AdminCouponsPage> {
                   ),
                   const SizedBox(width: 8),
                   TextButton.icon(
-                    onPressed: () => _deleteCoupon(coupon),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    icon: const Icon(Icons.delete, size: 18),
-                    label: const Text('Remover'),
+                    onPressed: () => _toggleStatus(coupon),
+                    icon: Icon(
+                      coupon.isActive ? Icons.block : Icons.check_circle,
+                      size: 18,
+                    ),
+                    label: Text(coupon.isActive ? 'Desativar' : 'Ativar'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: coupon.isActive
+                          ? Colors.red
+                          : Colors.green,
+                    ),
                   ),
                 ],
               );

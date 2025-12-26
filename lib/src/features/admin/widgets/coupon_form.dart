@@ -9,7 +9,8 @@ class CouponForm extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController codeController;
   final TextEditingController valueController;
-  
+  final TextEditingController usageController;
+
   final DiscountType selectedType;
   final ValueChanged<DiscountType?> onTypeChanged;
 
@@ -28,6 +29,7 @@ class CouponForm extends StatelessWidget {
     required this.selectedType,
     required this.onTypeChanged,
     required this.onSubmit,
+    required this.usageController,
     this.isEditing = false,
     this.isLoading = false,
     this.submitLabel = 'SALVAR',
@@ -55,7 +57,8 @@ class CouponForm extends StatelessWidget {
               border: OutlineInputBorder(),
               helperText: 'Ex: Black Friday 2024',
             ),
-            validator: (value) => value?.isEmpty ?? true ? 'Nome obrigatório' : null,
+            validator: (value) =>
+                value?.isEmpty ?? true ? 'Nome obrigatório' : null,
           ),
           const SizedBox(height: 16),
 
@@ -63,7 +66,9 @@ class CouponForm extends StatelessWidget {
             controller: codeController,
             readOnly: isEditing,
             decoration: InputDecoration(
-              labelText: isEditing ? 'Código (Não editável)' : 'Código do Cupom',
+              labelText: isEditing
+                  ? 'Código (Não editável)'
+                  : 'Código do Cupom',
               border: const OutlineInputBorder(),
               filled: isEditing,
               fillColor: isEditing ? Colors.grey.shade200 : null,
@@ -73,7 +78,32 @@ class CouponForm extends StatelessWidget {
               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
               UpperCaseTextFormatter(),
             ],
-            validator: (value) => value?.isEmpty ?? true ? 'Código obrigatório' : null,
+            validator: (value) =>
+                value?.isEmpty ?? true ? 'Código obrigatório' : null,
+          ),
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: usageController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: false),
+            decoration: const InputDecoration(
+              labelText: 'Quantidade de usos',
+              border: OutlineInputBorder(),
+              helperText: 'Ex: 50'
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+            ],
+            validator: (value) {
+              if(value?.isEmpty ?? true) {
+                return 'Quantidade obrigatória';
+              }
+              final intValue = int.tryParse(value!);
+              if(intValue == null || intValue <= 0) {
+                return 'Informe uma quantidade válida';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 16),
 
@@ -83,10 +113,19 @@ class CouponForm extends StatelessWidget {
               Expanded(
                 child: DropdownButtonFormField<DiscountType>(
                   initialValue: selectedType,
-                  decoration: const InputDecoration(labelText: 'Tipo', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
-                    DropdownMenuItem(value: DiscountType.percentage, child: Text('Percentagem (%)')),
-                    DropdownMenuItem(value: DiscountType.fixed, child: Text('Fixo (R\$)')),
+                    DropdownMenuItem(
+                      value: DiscountType.percentage,
+                      child: Text('Percentagem (%)'),
+                    ),
+                    DropdownMenuItem(
+                      value: DiscountType.fixed,
+                      child: Text('Fixo (R\$)'),
+                    ),
                   ],
                   onChanged: onTypeChanged,
                 ),
@@ -95,10 +134,18 @@ class CouponForm extends StatelessWidget {
               Expanded(
                 child: TextFormField(
                   controller: valueController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Valor', border: OutlineInputBorder()),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-                  validator: (v) => AppValidators.validateCouponValue(v, selectedType),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Valor',
+                    border: OutlineInputBorder(),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  validator: (v) =>
+                      AppValidators.validateCouponValue(v, selectedType),
                 ),
               ),
             ],
@@ -117,9 +164,12 @@ class CouponForm extends StatelessWidget {
               ),
               child: isLoading
                   ? const SizedBox(
-                      width: 24, 
-                      height: 24, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     )
                   : Text(submitLabel),
             ),
@@ -132,7 +182,7 @@ class CouponForm extends StatelessWidget {
               style: TextButton.styleFrom(foregroundColor: Colors.grey),
               label: const Text('Voltar'),
             ),
-          ]
+          ],
         ],
       ),
     );

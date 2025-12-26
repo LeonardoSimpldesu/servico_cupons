@@ -6,13 +6,11 @@ import 'package:trying_flutter/src/shared/widgets/responsive_layout.dart';
 class CouponList extends StatelessWidget {
   final List<CouponModel> coupons;
   final Widget Function(BuildContext, CouponModel) itemBuilder;
-  final double gridItemHeight;
 
   const CouponList({
     super.key,
     required this.coupons,
     required this.itemBuilder,
-    this.gridItemHeight = 110,
   });
 
   @override
@@ -34,7 +32,7 @@ class CouponList extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 400,
-          mainAxisExtent: gridItemHeight,
+          mainAxisExtent: 165,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),

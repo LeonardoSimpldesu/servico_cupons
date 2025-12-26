@@ -22,6 +22,7 @@ class _EditCouponPageState extends State<EditCouponPage> {
   late TextEditingController _nameController;
   late TextEditingController _codeController;
   late TextEditingController _valueController;
+  late TextEditingController _usageController;
   late DiscountType _selectedType;
 
   bool _isLoading = false;
@@ -31,6 +32,7 @@ class _EditCouponPageState extends State<EditCouponPage> {
     super.initState();
     _nameController = TextEditingController(text: widget.coupon.name);
     _codeController = TextEditingController(text: widget.coupon.code);
+    _usageController = TextEditingController(text: widget.coupon.maxUsage.toString());
     _valueController = TextEditingController(
       text: widget.coupon.value.toString().replaceAll('.', ','),
     );
@@ -42,6 +44,7 @@ class _EditCouponPageState extends State<EditCouponPage> {
     _nameController.dispose();
     _codeController.dispose();
     _valueController.dispose();
+    _usageController.dispose();
     super.dispose();
   }
 
@@ -55,6 +58,7 @@ class _EditCouponPageState extends State<EditCouponPage> {
           code: _codeController.text,
           type: _selectedType,
           value: double.parse(_valueController.text.replaceAll(',', '.')),
+          maxUsage: int.parse(_usageController.text),
         );
 
         await _repository.updateCoupon(updatedCoupon);
@@ -100,6 +104,7 @@ class _EditCouponPageState extends State<EditCouponPage> {
                   nameController: _nameController,
                   codeController: _codeController,
                   valueController: _valueController,
+                  usageController: _usageController,
                   selectedType: _selectedType,
                   isLoading: _isLoading,
 

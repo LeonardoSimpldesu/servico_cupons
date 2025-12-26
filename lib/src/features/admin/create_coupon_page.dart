@@ -22,6 +22,7 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _valueController = TextEditingController();
+  final _usageController = TextEditingController();
 
   DiscountType _selectedType = DiscountType.percentage;
 
@@ -34,6 +35,7 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
     _nameController.dispose();
     _codeController.dispose();
     _valueController.dispose();
+    _usageController.dispose();
     super.dispose();
   }
 
@@ -115,6 +117,7 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
                       codeController: _codeController,
                       valueController: _valueController,
                       selectedType: _selectedType,
+                      usageController: _usageController,
                       isLoading: _isLoading,
                       submitLabel: 'SALVAR E GERAR QR',
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trying_flutter/src/shared/models/coupon_model.dart';
+import 'package:trying_flutter/src/shared/widgets/qr_modal.dart';
 
 class CouponCard extends StatelessWidget {
   final CouponModel coupon;
@@ -10,8 +11,12 @@ class CouponCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final isInactive = !coupon.isActive;
+    final isSoldOut = coupon.currentUsage >= coupon.maxUsage;
+
+    Widget cardContent = Card(
       elevation: 4,
+      color: isInactive ? Colors.grey.shade200 : null,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
@@ -23,14 +28,16 @@ class CouponCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: isInactive ? Colors.grey : Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     coupon.type == DiscountType.percentage
                         ? Icons.percent
                         : Icons.attach_money,
-                    color: Colors.blue,
+                    color: isInactive
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.secondary,
                     size: 32,
                   ),
                 ),
@@ -42,9 +49,13 @@ class CouponCard extends StatelessWidget {
                     children: [
                       Text(
                         coupon.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          decoration: isInactive
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: isInactive ? Colors.grey : null,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -84,20 +95,52 @@ class CouponCard extends StatelessWidget {
               ],
             ),
           ),
-          if (actions != null && actions!.isNotEmpty) ...[
-            const Divider(
-              height: 1,
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  tooltip: 'Ver QR Code',
+                  icon: const Icon(Icons.qr_code, color: Colors.purple),
+                  onPressed: () => showQrCodeModal(context, coupon),
+                ),
+
+                if (actions != null) ...actions!,
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actions!,
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
+
+    if (isInactive) {
+      return Opacity(
+        opacity: 0.7,
+        child: ClipRect(
+          child: Banner(
+            message: 'DESATIVADO',
+            location: BannerLocation.topEnd,
+            color: Colors.grey,
+            child: cardContent,
+          ),
+        ),
+      );
+    } else if (isSoldOut) {
+      return Opacity(
+        opacity: 0.7,
+        child: ClipRect(
+          child: Banner(
+            message: 'ESGOTADO',
+            location: BannerLocation.topEnd,
+            color: Colors.red,
+            child: cardContent,
+          ),
+        ),
+      );
+    } else {
+      return cardContent;
+    }
   }
 }
