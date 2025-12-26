@@ -3,11 +3,15 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:brasil_fields/brasil_fields.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:trying_flutter/src/core/constants/app_assets.dart';
 import 'package:trying_flutter/src/shared/widgets/responsive_layout.dart';
 import 'package:trying_flutter/src/core/theme/app_colors.dart';
 import 'package:trying_flutter/src/shared/utils/app_validators.dart';
+import 'package:trying_flutter/src/shared/models/user_model.dart';
+import 'package:trying_flutter/src/shared/repositories/auth_repository.dart';
+import 'package:trying_flutter/src/shared/repositories/user_repository.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -17,6 +21,11 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final AuthRepository _authRepository = AuthRepository();
+  final UserRepository _userRepository = UserRepository();
+
+  bool _isLoading = false;
+
   final _nameController = TextEditingController();
   final _cpfController = TextEditingController();
   final _emailController = TextEditingController();
@@ -29,13 +38,61 @@ class _RegisterPageState extends State<RegisterPage> {
   final _showConfirmPassword = ValueNotifier<bool>(false);
   final _formKey = GlobalKey<FormState>();
 
-  void _register() {
-    // TODO implement registration logic
+  Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Processando register...')));
-      context.go('/admin/coupons');
+      setState(() => _isLoading = true);
+
+      try {
+        await _authRepository.register(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+
+        final User? currentUser = _authRepository.currentUser;
+
+        if (currentUser != null) {
+          final newUser = UserModel(
+            id: currentUser.uid,
+            name: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            cpf: _cpfController.text,
+            phone: _phoneController.text,
+            role: 'consumer',
+          );
+
+          await _userRepository.saveUser(newUser);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Conta criada com sucesso!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            context.go('/consumer');
+          }
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro desconhecido: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
@@ -143,9 +200,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     decoration: const InputDecoration(
                       labelText: 'E-mail',
                       prefixIcon: Icon(Icons.email),
-                      hintText: 'exemplo@email.com'
+                      hintText: 'exemplo@email.com',
                     ),
-                    validator: AppValidators.validateEmail
+                    validator: AppValidators.validateEmail,
                   ),
 
                   const SizedBox(height: 16),
@@ -187,7 +244,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             onPressed: () => _showPassword.value = !showPass,
                           ),
                         ),
-                        validator: AppValidators.validatePassword
+                        validator: AppValidators.validatePassword,
                       );
                     },
                   ),
@@ -322,8 +379,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _register,
-                      child: const Text('CADASTRAR'),
+                      onPressed: _isLoading ? null : _register,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('CADASTRAR'),
                     ),
                   ),
 

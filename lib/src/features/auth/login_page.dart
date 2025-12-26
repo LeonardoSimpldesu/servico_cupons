@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:trying_flutter/src/core/constants/app_assets.dart';
 import 'package:trying_flutter/src/shared/utils/app_validators.dart';
 import 'package:trying_flutter/src/shared/widgets/responsive_layout.dart';
+import 'package:trying_flutter/src/shared/repositories/auth_repository.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,19 +14,50 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _authRepository = AuthRepository();
+  bool _isLoading = false;
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   final _showPassword = ValueNotifier<bool>(false);
   final _formKey = GlobalKey<FormState>();
 
-  void _login() {
-    // TODO implement registration logic
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Processando login...')));
-      context.go('/admin/coupons');
+      setState(() => _isLoading = true);
+
+      try {
+        await _authRepository.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+
+        if (mounted) {
+          if (_emailController.text.contains('admin')) {
+            context.go('/admin/coupons');
+          } else {
+            context.go('/consumer');
+          }
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro desconhecido'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -140,8 +172,10 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _login,
-                      child: const Text('ENTRAR'),
+                      onPressed: _isLoading ? null : _login,
+                      child: _isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text('ENTRAR'),
                     ),
                   ),
 
