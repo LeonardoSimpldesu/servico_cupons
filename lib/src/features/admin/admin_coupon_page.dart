@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:trying_flutter/src/shared/models/coupon_model.dart';
 import 'package:trying_flutter/src/shared/widgets/coupon_card.dart';
 import 'package:trying_flutter/src/shared/widgets/coupon_list.dart';
+import 'package:trying_flutter/src/shared/repositories/coupon_repository.dart';
 import 'widgets/admin_drawer.dart';
 
 class AdminCouponsPage extends StatefulWidget {
@@ -14,49 +15,20 @@ class AdminCouponsPage extends StatefulWidget {
 }
 
 class _AdminCouponsPageState extends State<AdminCouponsPage> {
-  final List<CouponModel> _coupons = [
-    CouponModel(
-      name: 'Black Friday',
-      code: 'BLACK25',
-      type: DiscountType.percentage,
-      value: 25,
-    ),
-    CouponModel(
-      name: 'Natal Antecipado',
-      code: 'NATAL10',
-      type: DiscountType.fixed,
-      value: 10,
-    ),
-    CouponModel(
-      name: 'Ano Novo',
-      code: 'VIRADA2025',
-      type: DiscountType.percentage,
-      value: 15,
-    ),
-    CouponModel(
-      name: 'Cliente VIP',
-      code: 'VIP50',
-      type: DiscountType.fixed,
-      value: 50,
-    ),
-    CouponModel(
-      name: 'Cliente Premium',
-      code: 'PREMIUM50',
-      type: DiscountType.fixed,
-      value: 50,
-    ),
-  ];
+  final CouponRepository _repository = CouponRepository();
 
-  void _deleteCoupon(CouponModel coupon) {
-    setState(() {
-      _coupons.remove(coupon);
-    });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('${coupon.name} removido!')));
+  void _deleteCoupon(CouponModel coupon) async {
+    await _repository.deleteCoupon(coupon.code);
+
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${coupon.name} removido!')));
+    }
   }
 
   void _editCoupon(CouponModel coupon) {
+    // Futuro: context.go('/admin/edit/${coupon.id}');
     print('Editar ${coupon.code}');
   }
 
@@ -65,30 +37,50 @@ class _AdminCouponsPageState extends State<AdminCouponsPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Gerenciar Cupons')),
       drawer: const AdminDrawer(),
+      body: StreamBuilder<List<CouponModel>>(
+        stream: _repository.getCouponsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-      body: CouponList(
-        itemBuilder: (context, coupon) {
-          return CouponCard(
-            coupon: coupon,
-            actions: [
-              TextButton.icon(
-                onPressed: () => _editCoupon(coupon),
-                style: TextButton.styleFrom(foregroundColor: Colors.blue),
-                icon: const Icon(Icons.edit, size: 18),
-                label: const Text('Editar'),
-              ),
-              const SizedBox(width: 8),
-              TextButton.icon(
-                onPressed: () => _deleteCoupon(coupon),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                icon: const Icon(Icons.delete, size: 18),
-                label: const Text('Remover'),
-              ),
-            ],
+          if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          }
+
+          final coupons = snapshot.data ?? [];
+
+          if (coupons.isEmpty) {
+            return const Center(child: Text('Nenhum cupom encontrado.'));
+          }
+
+          final couponsFromFirebase = snapshot.data!;
+
+          return CouponList(
+            coupons: couponsFromFirebase,
+            gridItemHeight: 165,
+            itemBuilder: (context, coupon) {
+              return CouponCard(
+                coupon: coupon,
+                actions: [
+                  TextButton.icon(
+                    onPressed: () => _editCoupon(coupon),
+                    style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Editar'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _deleteCoupon(coupon),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text('Remover'),
+                  ),
+                ],
+              );
+            },
           );
         },
-        coupons: _coupons,
-        gridItemHeight: 165,
       ),
 
       floatingActionButton: FloatingActionButton(

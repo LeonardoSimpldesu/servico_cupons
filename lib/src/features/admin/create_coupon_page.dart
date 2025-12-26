@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:trying_flutter/src/core/theme/app_colors.dart';
 
+import 'package:trying_flutter/src/core/theme/app_colors.dart';
 import 'package:trying_flutter/src/shared/utils/app_validators.dart';
 import 'widgets/admin_drawer.dart';
 import 'package:trying_flutter/src/shared/formatters/upper_case_text_formatter.dart';
 import 'package:trying_flutter/src/shared/models/coupon_model.dart';
+import 'package:trying_flutter/src/shared/repositories/coupon_repository.dart';
 
 class CreateCouponPage extends StatefulWidget {
   const CreateCouponPage({super.key});
@@ -19,6 +20,8 @@ class CreateCouponPage extends StatefulWidget {
 class _CreateCouponPageState extends State<CreateCouponPage> {
   final _formKey = GlobalKey<FormState>();
 
+  final CouponRepository _repository = CouponRepository();
+
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _valueController = TextEditingController();
@@ -26,6 +29,8 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
   DiscountType _selectedType = DiscountType.percentage;
 
   String? _qrData;
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -35,23 +40,53 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
     super.dispose();
   }
 
-  void _generateQRCode() {
+  Future<void> _generateQRCode() async {
     FocusScope.of(context).unfocus();
-    if (_formKey.currentState!.validate()) {
-      final coupon = CouponModel(
-        name: _nameController.text,
-        code: _codeController.text,
-        type: _selectedType,
-        value: double.parse(_valueController.text.replaceAll(',', '.')),
-      );
 
+    if (_formKey.currentState!.validate()) {
       setState(() {
-        _qrData = coupon.toJson();
+        _isLoading = true;
+        _qrData = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QR Code gerado com sucesso!')),
-      );
+      try {
+        final coupon = CouponModel(
+          name: _nameController.text,
+          code: _codeController.text,
+          type: _selectedType,
+          value: double.parse(_valueController.text.replaceAll(',', '.')),
+        );
+
+        await _repository.createCoupon(coupon);
+
+        setState(() {
+          _qrData = coupon.toJson();
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cupom salvo e QR Code gerado!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao salvar: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -177,14 +212,31 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
 
                           SizedBox(
                             height: 50,
-                            child: ElevatedButton.icon(
-                              onPressed: _generateQRCode,
-                              icon: const Icon(Icons.qr_code),
-                              label: const Text('GERAR QR CODE'),
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _generateQRCode,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.blue.shade200,
                               ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.qr_code),
+                                        SizedBox(width: 8),
+                                        Text('SALVAR E GERAR QR'),
+                                      ],
+                                    ),
                             ),
                           ),
 
@@ -192,8 +244,10 @@ class _CreateCouponPageState extends State<CreateCouponPage> {
 
                           TextButton.icon(
                             onPressed: () => context.go('/admin/coupons'),
-                            style: TextButton.styleFrom(foregroundColor: AppColors.mutedForeground),
-                            label: const Text('Cancelar'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.mutedForeground,
+                            ),
+                            label: const Text('Voltar'),
                           ),
                         ],
                       ),
